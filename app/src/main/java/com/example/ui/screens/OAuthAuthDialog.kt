@@ -200,10 +200,37 @@ fun OAuthAuthDialog(
                                                 "Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Mobile Safari/537.36"
 
                                             webViewClient = object : WebViewClient() {
+                                                private var isCodeHandled = false
+
+                                                private fun checkAndHandleUrl(url: String?): Boolean {
+                                                    if (url == null || isCodeHandled) return false
+                                                    if (url.contains("account.xiaomi.com/pass/sns/login/load") ||
+                                                        url.contains("code=") ||
+                                                        url.contains("access_token=") ||
+                                                        url.startsWith(state.providerSpec.redirectUri)
+                                                    ) {
+                                                        val uri = Uri.parse(url)
+                                                        val code = uri.getQueryParameter("code")
+                                                        val token = uri.getQueryParameter("access_token")
+
+                                                        if (!code.isNullOrBlank()) {
+                                                            isCodeHandled = true
+                                                            onCodeReceived(code)
+                                                            return true
+                                                        } else if (!token.isNullOrBlank()) {
+                                                            isCodeHandled = true
+                                                            onDirectAccessTokenReceived(token)
+                                                            return true
+                                                        }
+                                                    }
+                                                    return false
+                                                }
+
                                                 override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
                                                     super.onPageStarted(view, url, favicon)
                                                     webViewLoading = true
                                                     url?.let { currentWebUrl = it }
+                                                    checkAndHandleUrl(url)
                                                 }
 
                                                 override fun onPageFinished(view: WebView?, url: String?) {
@@ -217,23 +244,8 @@ fun OAuthAuthDialog(
                                                 ): Boolean {
                                                     val url = request?.url?.toString() ?: return false
                                                     currentWebUrl = url
-
-                                                    // Check for OAuth redirect URI match
-                                                    if (url.startsWith(state.providerSpec.redirectUri) ||
-                                                        url.contains("code=") ||
-                                                        url.contains("access_token=")
-                                                    ) {
-                                                        val uri = Uri.parse(url)
-                                                        val code = uri.getQueryParameter("code")
-                                                        val token = uri.getQueryParameter("access_token")
-
-                                                        if (!code.isNullOrBlank()) {
-                                                            onCodeReceived(code)
-                                                            return true
-                                                        } else if (!token.isNullOrBlank()) {
-                                                            onDirectAccessTokenReceived(token)
-                                                            return true
-                                                        }
+                                                    if (checkAndHandleUrl(url)) {
+                                                        return true
                                                     }
                                                     return false
                                                 }
