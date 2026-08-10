@@ -1,0 +1,6 @@
+{
+  "name": "GMSCX",
+  "description": "GMSCX Services - MicroG clone application with Google & Yandex OAuth account registration, GMS services control panel, and Cloud Messaging status.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
