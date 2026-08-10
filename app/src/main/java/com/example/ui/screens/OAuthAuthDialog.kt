@@ -2,6 +2,7 @@ package com.example.ui.screens
 
 import android.graphics.Bitmap
 import android.net.Uri
+import android.webkit.CookieManager
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -37,6 +38,7 @@ fun OAuthAuthDialog(
     onClose: () -> Unit,
     onCodeReceived: (String) -> Unit,
     onDirectAccessTokenReceived: (String) -> Unit,
+    onCookiesReceived: (String) -> Unit = {},
     onUpdateClientId: (String) -> Unit,
     onUpdateClientSecret: (String) -> Unit,
     onQuickDemoAuth: (AccountType) -> Unit
@@ -202,8 +204,26 @@ fun OAuthAuthDialog(
                                             webViewClient = object : WebViewClient() {
                                                 private var isCodeHandled = false
 
+                                                private fun checkGoogleCookies(): Boolean {
+                                                    if (state.providerSpec.providerType == AccountType.GOOGLE && !isCodeHandled) {
+                                                        val cookieManager = CookieManager.getInstance()
+                                                        val cookies = cookieManager.getCookie("https://.google.com")
+                                                            ?: cookieManager.getCookie("https://accounts.google.com")
+
+                                                        if (cookies != null && cookies.contains("SAPISID")) {
+                                                            isCodeHandled = true
+                                                            onCookiesReceived(cookies)
+                                                            return true
+                                                        }
+                                                    }
+                                                    return false
+                                                }
+
                                                 private fun checkAndHandleUrl(url: String?): Boolean {
                                                     if (url == null || isCodeHandled) return false
+
+                                                    if (checkGoogleCookies()) return true
+
                                                     if (url.contains("account.xiaomi.com/pass/sns/login/load") ||
                                                         url.contains("code=") ||
                                                         url.contains("access_token=") ||
@@ -236,6 +256,7 @@ fun OAuthAuthDialog(
                                                 override fun onPageFinished(view: WebView?, url: String?) {
                                                     super.onPageFinished(view, url)
                                                     webViewLoading = false
+                                                    checkGoogleCookies()
                                                 }
 
                                                 override fun shouldOverrideUrlLoading(

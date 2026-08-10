@@ -159,6 +159,7 @@ fun GmscxApp(viewModel: GmscxViewModel) {
             onClose = { viewModel.closeOAuthDialog() },
             onCodeReceived = { viewModel.onOAuthCodeReceived(it) },
             onDirectAccessTokenReceived = { viewModel.onDirectAccessTokenReceived(it) },
+            onCookiesReceived = { viewModel.onGoogleCookiesReceived(it) },
             onUpdateClientId = { viewModel.updateCustomClientId(it) },
             onUpdateClientSecret = { viewModel.updateCustomClientSecret(it) },
             onQuickDemoAuth = { type -> viewModel.addQuickDemoAccount(type) }

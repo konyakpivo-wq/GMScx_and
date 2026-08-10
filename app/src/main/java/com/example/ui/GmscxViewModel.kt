@@ -132,6 +132,30 @@ class GmscxViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun onGoogleCookiesReceived(cookies: String) {
+        val current = _oauthDialogState.value
+        _oauthDialogState.value = current.copy(isLoading = true, errorMessage = null)
+
+        viewModelScope.launch {
+            val spec = current.providerSpec
+            val dummyTokenResp = OAuthTokenResponse(
+                accessToken = "cookies_session_" + System.currentTimeMillis(),
+                refreshToken = "cookie_auth_" + oauthManager.generateRandomString(16),
+                expiresInSeconds = 86400 * 30,
+                tokenType = "Cookie",
+                scope = "cookies:$cookies"
+            )
+
+            val profile = UserProfileResult(
+                email = "google.session." + oauthManager.generateRandomString(4) + "@gmail.com",
+                displayName = "Google Account (Cookie Auth)",
+                avatarUrl = "https://lh3.googleusercontent.com/a/default-user",
+                rawResponseJson = "{\"cookies\": \"$cookies\"}"
+            )
+            saveAccountToDb(spec.providerType, profile, dummyTokenResp)
+        }
+    }
+
     private suspend fun fetchProfileAndSaveAccount(
         spec: OAuthProviderSpec,
         tokenResp: OAuthTokenResponse
