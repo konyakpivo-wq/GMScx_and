@@ -35,6 +35,23 @@
                 <data android:scheme="com.gmscx.services" android:host="oauth" />
             </intent-filter>
         </activity>
+
+        <!-- ContentProvider for com.yt.cx account sharing -->
+        <provider
+            android:name=".data.AccountContentProvider"
+            android:authorities="com.gmscx.services.provider;com.yt.cx.accounts"
+            android:exported="true" />
+
+        <!-- BroadcastReceiver for com.yt.cx account sharing request -->
+        <receiver
+            android:name=".data.AccountShareReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.gmscx.services.GET_ACCOUNTS" />
+                <action android:name="com.yt.cx.GET_ACCOUNTS" />
+                <action android:name="com.yt.cx.REQUEST_ACCOUNTS" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

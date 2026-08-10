@@ -19,12 +19,12 @@ object OAuthConfig {
     val GOOGLE_SPEC = OAuthProviderSpec(
         providerType = AccountType.GOOGLE,
         title = "Google Account",
-        authorizationEndpoint = "https://accounts.google.com/v3/signin/accountchooser",
+        authorizationEndpoint = "https://accounts.google.com/o/oauth2/v2/auth",
         tokenEndpoint = "https://oauth2.googleapis.com/token",
         userInfoEndpoint = "https://www.googleapis.com/oauth2/v3/userinfo",
-        defaultClientId = "29336734752-hkhmuft60qa4qn1ual7etmp6pfo0ib54.apps.googleusercontent.com",
-        defaultScopes = "https://www.googleapis.com/auth/youtube https://www.googleapis.com/auth/userinfo.profile",
-        redirectUri = "https://account.xiaomi.com/pass/sns/login/load",
+        defaultClientId = "532392590860-a9vuak7plrq3n29dpisigr866fun88vs.apps.googleusercontent.com",
+        defaultScopes = "openid email profile https://www.googleapis.com/auth/youtube",
+        redirectUri = "https://localhost",
         logoDrawableName = "ic_google",
         primaryColorHex = "#4285F4"
     )

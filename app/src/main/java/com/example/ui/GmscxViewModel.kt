@@ -1,6 +1,11 @@
 package com.example.ui
 
 import android.app.Application
+import android.content.Context
+import androidx.credentials.CredentialManager
+import androidx.credentials.CustomCredential
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.exceptions.GetCredentialException
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.data.AccountDao
@@ -13,6 +18,10 @@ import com.example.data.oauth.OAuthProviderSpec
 import com.example.data.oauth.OAuthTokenResponse
 import com.example.data.oauth.UserProfileResult
 import com.example.data.services.GmsServiceManager
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -61,6 +70,70 @@ class GmscxViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _uiEvents = MutableSharedFlow<UiEvent>()
     val uiEvents: SharedFlow<UiEvent> = _uiEvents.asSharedFlow()
+
+    fun performGoogleSignIn(context: Context) {
+        viewModelScope.launch {
+            try {
+                val credentialManager = CredentialManager.create(context)
+                val googleIdOption = GetGoogleIdOption.Builder()
+                    .setFilterByAuthorizedAccounts(false)
+                    .setServerClientId(OAuthConfig.GOOGLE_SPEC.defaultClientId)
+                    .setAutoSelectEnabled(false)
+                    .build()
+
+                val request = GetCredentialRequest.Builder()
+                    .addCredentialOption(googleIdOption)
+                    .build()
+
+                val result = credentialManager.getCredential(context, request)
+                val credential = result.credential
+
+                if (credential is CustomCredential && credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
+                    val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
+                    val idToken = googleIdTokenCredential.idToken
+                    val email = googleIdTokenCredential.id
+                    val displayName = googleIdTokenCredential.displayName ?: googleIdTokenCredential.givenName ?: email.substringBefore("@")
+                    val avatarUrl = googleIdTokenCredential.profilePictureUri?.toString()
+
+                    runCatching {
+                        val auth = FirebaseAuth.getInstance()
+                        val firebaseCred = GoogleAuthProvider.getCredential(idToken, null)
+                        auth.signInWithCredential(firebaseCred)
+                    }
+
+                    val profile = UserProfileResult(
+                        email = email,
+                        displayName = displayName,
+                        avatarUrl = avatarUrl,
+                        rawResponseJson = "{\"id_token\": \"$idToken\"}"
+                    )
+
+                    val tokenResp = OAuthTokenResponse(
+                        accessToken = idToken,
+                        refreshToken = "google_refresh_" + oauthManager.generateRandomString(16),
+                        expiresInSeconds = 3600,
+                        tokenType = "Bearer",
+                        scope = OAuthConfig.GOOGLE_SPEC.defaultScopes
+                    )
+
+                    saveAccountToDb(AccountType.GOOGLE, profile, tokenResp)
+                    _uiEvents.emit(UiEvent.ShowToast("Успешный вход в Google: $email"))
+                } else {
+                    _uiEvents.emit(UiEvent.ShowToast("Не удалось получить Google ID Token"))
+                }
+            } catch (e: GetCredentialException) {
+                if (e.type.contains("CANCELED", ignoreCase = true) || e.type.contains("Canceled", ignoreCase = true)) {
+                    // Пользователь отменил вход
+                } else {
+                    _uiEvents.emit(UiEvent.ShowToast("Google Sign-In: ${e.localizedMessage ?: e.type}"))
+                    openOAuthFlow(AccountType.GOOGLE)
+                }
+            } catch (e: Exception) {
+                _uiEvents.emit(UiEvent.ShowToast("Ошибка авторизации: ${e.localizedMessage}"))
+                openOAuthFlow(AccountType.GOOGLE)
+            }
+        }
+    }
 
     fun openOAuthFlow(type: AccountType) {
         val spec = OAuthConfig.getSpecForType(type)

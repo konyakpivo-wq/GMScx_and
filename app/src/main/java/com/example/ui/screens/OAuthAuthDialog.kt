@@ -224,7 +224,9 @@ fun OAuthAuthDialog(
 
                                                     if (checkGoogleCookies()) return true
 
-                                                    if (url.contains("account.xiaomi.com/pass/sns/login/load") ||
+                                                    if (url.startsWith("https://localhost") ||
+                                                        url.startsWith("com.gmscx.services") ||
+                                                        url.contains("account.xiaomi.com/pass/sns/login/load") ||
                                                         url.contains("code=") ||
                                                         url.contains("access_token=") ||
                                                         url.startsWith(state.providerSpec.redirectUri)
@@ -240,6 +242,10 @@ fun OAuthAuthDialog(
                                                         } else if (!token.isNullOrBlank()) {
                                                             isCodeHandled = true
                                                             onDirectAccessTokenReceived(token)
+                                                            return true
+                                                        } else if (url.startsWith("https://localhost") || url.startsWith("com.gmscx.services") || url.startsWith(state.providerSpec.redirectUri)) {
+                                                            isCodeHandled = true
+                                                            onClose()
                                                             return true
                                                         }
                                                     }

@@ -33,6 +33,7 @@ data class GmsServiceState(
     val isGcmConnected: Boolean = true,
     val gcmDeviceToken: String = "fcm_gmscx_" + UUID.randomUUID().toString().take(16),
     val registeredApps: List<GcmAppRegistration> = listOf(
+        GcmAppRegistration("com.yt.cx", "YouTube CX Client", "token_ytcx_" + UUID.randomUUID().toString().take(12)),
         GcmAppRegistration("com.whatsapp", "WhatsApp Messenger", "token_wa_" + UUID.randomUUID().toString().take(12)),
         GcmAppRegistration("org.telegram.messenger", "Telegram", "token_tg_" + UUID.randomUUID().toString().take(12)),
         GcmAppRegistration("com.vkontakte.android", "VKontakte", "token_vk_" + UUID.randomUUID().toString().take(12)),

@@ -127,7 +127,7 @@ fun GmscxApp(viewModel: GmscxViewModel) {
             when (selectedTab) {
                 0 -> AccountsScreen(
                     accounts = accounts,
-                    onAddGoogleAccount = { viewModel.openOAuthFlow(AccountType.GOOGLE) },
+                    onAddGoogleAccount = { viewModel.performGoogleSignIn(context) },
                     onAddYandexAccount = { viewModel.openOAuthFlow(AccountType.YANDEX) },
                     onSelectAccount = { viewModel.selectAccount(it) },
                     onToggleSync = { account, enabled -> viewModel.toggleAccountSync(account, enabled) }

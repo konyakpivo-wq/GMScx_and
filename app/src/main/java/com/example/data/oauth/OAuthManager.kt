@@ -54,18 +54,16 @@ class OAuthManager {
             .appendQueryParameter("redirect_uri", spec.redirectUri)
             .appendQueryParameter("response_type", "code")
             .appendQueryParameter("scope", scope)
+            .appendQueryParameter("state", currentState)
+            .appendQueryParameter("code_challenge", codeChallenge)
+            .appendQueryParameter("code_challenge_method", "S256")
 
         if (spec.providerType == AccountType.GOOGLE) {
-            uriBuilder.appendQueryParameter("service", "lso")
-            uriBuilder.appendQueryParameter("flowName", "GeneralOAuthFlow")
             if (forcePrompt) {
                 uriBuilder.appendQueryParameter("prompt", "select_account consent")
                 uriBuilder.appendQueryParameter("access_type", "offline")
             }
         } else if (spec.providerType == AccountType.YANDEX && forcePrompt) {
-            uriBuilder.appendQueryParameter("state", currentState)
-            uriBuilder.appendQueryParameter("code_challenge", codeChallenge)
-            uriBuilder.appendQueryParameter("code_challenge_method", "S256")
             uriBuilder.appendQueryParameter("force_confirm", "yes")
         }
 
